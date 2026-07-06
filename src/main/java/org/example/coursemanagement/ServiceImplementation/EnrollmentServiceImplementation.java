@@ -8,6 +8,9 @@ import org.example.coursemanagement.Repository.CourseRepository;
 import org.example.coursemanagement.Repository.EnrollmentRepository;
 import org.example.coursemanagement.Repository.StudentRepository;
 import org.example.coursemanagement.Service.EnrollmentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -66,11 +69,9 @@ public class EnrollmentServiceImplementation implements EnrollmentService {
     }
 
     @Override
-    public List<EnrollmentDTO> getAllEnrollments() {
-        return enrollmentRepository.findAll()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public Page<EnrollmentDTO> getAllEnrollments(Pageable pageable) {
+        return enrollmentRepository.findAll(pageable)
+                .map(this::toDTO);
     }
 
     @Override

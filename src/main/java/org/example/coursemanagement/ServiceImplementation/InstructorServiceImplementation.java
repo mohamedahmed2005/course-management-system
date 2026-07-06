@@ -4,6 +4,9 @@ import org.example.coursemanagement.DTO.InstructorDTO;
 import org.example.coursemanagement.Entity.Instructor;
 import org.example.coursemanagement.Repository.InstructorRepository;
 import org.example.coursemanagement.Service.InstructorService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -44,11 +47,10 @@ public class InstructorServiceImplementation implements InstructorService {
     }
 
     @Override
-    public List<InstructorDTO> getAllInstructors() {
-        return instructorRepository.findAll()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public Page<InstructorDTO> getAllInstructors(Pageable pageable) {
+
+        return instructorRepository.findAll(pageable)
+                .map(this::toDTO);
     }
 
     @Override

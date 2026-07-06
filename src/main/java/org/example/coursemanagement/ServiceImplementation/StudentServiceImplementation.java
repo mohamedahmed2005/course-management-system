@@ -4,10 +4,10 @@ import org.example.coursemanagement.DTO.StudentDTO;
 import org.example.coursemanagement.Entity.Student;
 import org.example.coursemanagement.Repository.StudentRepository;
 import org.example.coursemanagement.Service.StudentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class StudentServiceImplementation implements StudentService {
@@ -18,7 +18,6 @@ public class StudentServiceImplementation implements StudentService {
         this.studentRepository = studentRepository;
     }
 
-    // ─── Mapping helpers ────────────────────────────────────────
 
     /** Entity → DTO */
     private StudentDTO toDTO(Student student) {
@@ -29,7 +28,6 @@ public class StudentServiceImplementation implements StudentService {
         );
     }
 
-    /** DTO → Entity (بدون id لأن الـ DB بتولّده) */
     private Student toEntity(StudentDTO dto) {
         Student student = new Student();
         student.setName(dto.getName());
@@ -46,11 +44,9 @@ public class StudentServiceImplementation implements StudentService {
     }
 
     @Override
-    public List<StudentDTO> getAllStudents() {
-        return studentRepository.findAll()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public Page<StudentDTO> getAllStudents(Pageable pageable) {
+        return studentRepository.findAll(pageable)
+                .map(this::toDTO);
     }
 
     @Override

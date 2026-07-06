@@ -7,7 +7,9 @@ import org.example.coursemanagement.Repository.CourseRepository;
 import org.example.coursemanagement.Repository.InstructorRepository;
 import org.example.coursemanagement.Service.CourseService;
 import org.springframework.stereotype.Service;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,11 +62,10 @@ public class CourseServiceImplementation implements CourseService {
     }
 
     @Override
-    public List<CourseDTO> getAllCourses() {
-        return courseRepository.findAll()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public Page<CourseDTO> getAllCourses(Pageable pageable) {
+
+        return courseRepository.findAll(pageable)
+                .map(this::toDTO);
     }
 
     @Override
