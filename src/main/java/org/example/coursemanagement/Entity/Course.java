@@ -1,6 +1,9 @@
 package org.example.coursemanagement.Entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
 @Entity
@@ -9,12 +12,19 @@ public class Course {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
     private Long id;
 
+    @Setter
+    @Getter
     private String title;
 
+    @Setter
+    @Getter
     private String description;
 
+    @Getter
+    @Setter
     private boolean deleted = false; // Soft Delete
 
     @ManyToOne
@@ -23,6 +33,4 @@ public class Course {
 
     @OneToMany(mappedBy = "course")
     private List<Enrollment> enrollments;
-
-    // getters & setters
 }
