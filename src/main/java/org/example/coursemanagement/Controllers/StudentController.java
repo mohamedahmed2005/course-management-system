@@ -1,6 +1,6 @@
 package org.example.coursemanagement.Controllers;
 
-import org.example.coursemanagement.Entity.Student;
+import org.example.coursemanagement.DTO.StudentDTO;
 import org.example.coursemanagement.Service.StudentService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,23 +17,23 @@ public class StudentController {
     }
 
     @PostMapping
-    public Student addStudent(@RequestBody Student student) {
-        return studentService.addStudent(student);
+    public StudentDTO addStudent(@RequestBody StudentDTO studentDTO) {
+        return studentService.addStudent(studentDTO);
     }
 
     @GetMapping
-    public List<Student> getAllStudents() {
+    public List<StudentDTO> getAllStudents() {
         return studentService.getAllStudents();
     }
 
     @GetMapping("/{id}")
-    public Student getById(@PathVariable Long id) {
+    public StudentDTO getById(@PathVariable Long id) {
         return studentService.getStudentById(id);
     }
 
     @PutMapping("/{id}")
-    public Student update(@PathVariable Long id, @RequestBody Student student) {
-        return studentService.updateStudent(id, student);
+    public StudentDTO update(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
+        return studentService.updateStudent(id, studentDTO);
     }
 
     @DeleteMapping("/{id}")

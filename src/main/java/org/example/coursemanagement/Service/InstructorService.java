@@ -1,13 +1,18 @@
 package org.example.coursemanagement.Service;
 
-import org.example.coursemanagement.Entity.Instructor;
+import org.example.coursemanagement.DTO.InstructorDTO;
 
 import java.util.List;
 
 public interface InstructorService {
-    Instructor addInstructor(Instructor instructor);
-    List<Instructor> getAllInstructors();
-    Instructor getInstructorById(Long id);
-    Instructor updateInstructor(Long id, Instructor instructor);
+
+    InstructorDTO addInstructor(InstructorDTO instructorDTO);
+
+    List<InstructorDTO> getAllInstructors();
+
+    InstructorDTO getInstructorById(Long id);
+
+    InstructorDTO updateInstructor(Long id, InstructorDTO instructorDTO);
+
     void deleteInstructor(Long id);
 }

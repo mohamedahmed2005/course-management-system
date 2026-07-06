@@ -1,15 +1,18 @@
 package org.example.coursemanagement.Service;
 
-import org.example.coursemanagement.Entity.Course;
-import org.springframework.stereotype.Service;
+import org.example.coursemanagement.DTO.CourseDTO;
 
 import java.util.List;
 
 public interface CourseService {
-    Course addCourse(Course course);
-    List<Course> getAllCourses();
-    Course getCourseById(Long id);
-    Course updateCourse(Long id, Course course);
+
+    CourseDTO addCourse(CourseDTO courseDTO);
+
+    List<CourseDTO> getAllCourses();
+
+    CourseDTO getCourseById(Long id);
+
+    CourseDTO updateCourse(Long id, CourseDTO courseDTO);
 
     void deleteCourse(Long id); // soft delete
 }

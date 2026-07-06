@@ -1,5 +1,6 @@
 package org.example.coursemanagement.ServiceImplementation;
 
+import org.example.coursemanagement.DTO.EnrollmentDTO;
 import org.example.coursemanagement.Entity.Course;
 import org.example.coursemanagement.Entity.Enrollment;
 import org.example.coursemanagement.Entity.Student;
@@ -10,27 +11,38 @@ import org.example.coursemanagement.Service.EnrollmentService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EnrollmentServiceImplementation implements EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
-    private final StudentRepository studentRepository;
-    private final CourseRepository courseRepository;
+    private final StudentRepository    studentRepository;
+    private final CourseRepository     courseRepository;
 
-    public EnrollmentServiceImplementation(
-            EnrollmentRepository enrollmentRepository,
-            StudentRepository studentRepository,
-            CourseRepository courseRepository
-    ) {
+    public EnrollmentServiceImplementation(EnrollmentRepository enrollmentRepository,
+                                           StudentRepository studentRepository,
+                                           CourseRepository courseRepository) {
         this.enrollmentRepository = enrollmentRepository;
-        this.studentRepository = studentRepository;
-        this.courseRepository = courseRepository;
+        this.studentRepository    = studentRepository;
+        this.courseRepository     = courseRepository;
     }
 
-    @Override
-    public Enrollment enrollStudent(Long studentId, Long courseId) {
+    // ─── Mapping helper ─────────────────────────────────────────
 
+    private EnrollmentDTO toDTO(Enrollment enrollment) {
+        return new EnrollmentDTO(
+                enrollment.getId(),
+                enrollment.getStudent().getId(),
+                enrollment.getCourse().getId(),
+                enrollment.getStatus()
+        );
+    }
+
+    // ─── Service methods ────────────────────────────────────────
+
+    @Override
+    public EnrollmentDTO enrollStudent(Long studentId, Long courseId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
@@ -50,28 +62,38 @@ public class EnrollmentServiceImplementation implements EnrollmentService {
         enrollment.setCourse(course);
         enrollment.setStatus("ENROLLED");
 
-        return enrollmentRepository.save(enrollment);
+        return toDTO(enrollmentRepository.save(enrollment));
     }
 
     @Override
-    public List<Enrollment> getAllEnrollments() {
-        return enrollmentRepository.findAll();
+    public List<EnrollmentDTO> getAllEnrollments() {
+        return enrollmentRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Enrollment> getEnrollmentsByStudentId(Long studentId) {
-        return enrollmentRepository.findByStudentId(studentId);
+    public List<EnrollmentDTO> getEnrollmentsByStudentId(Long studentId) {
+        return enrollmentRepository.findByStudentId(studentId)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Enrollment> getEnrollmentsByCourseId(Long courseId) {
-        return enrollmentRepository.findByCourseId(courseId);
+    public List<EnrollmentDTO> getEnrollmentsByCourseId(Long courseId) {
+        return enrollmentRepository.findByCourseId(courseId)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Enrollment getEnrollmentById(Long id) {
-        return enrollmentRepository.findById(id)
+    public EnrollmentDTO getEnrollmentById(Long id) {
+        Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Enrollment not found"));
+        return toDTO(enrollment);
     }
 
     @Override

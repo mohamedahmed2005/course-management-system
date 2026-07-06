@@ -29,6 +29,8 @@ public class Course {
 
     @ManyToOne
     @JoinColumn(name = "instructor_id")
+    @Getter
+    @Setter
     private Instructor instructor;
 
     @OneToMany(mappedBy = "course")

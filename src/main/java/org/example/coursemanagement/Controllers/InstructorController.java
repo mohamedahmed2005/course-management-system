@@ -1,16 +1,15 @@
 package org.example.coursemanagement.Controllers;
 
-import org.example.coursemanagement.Entity.Course;
-import org.example.coursemanagement.Entity.Instructor;
-import org.example.coursemanagement.Service.CourseService;
+import org.example.coursemanagement.DTO.InstructorDTO;
 import org.example.coursemanagement.Service.InstructorService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/Instructors")
+@RequestMapping("/api/instructors")
 public class InstructorController {
+
     private final InstructorService instructorService;
 
     public InstructorController(InstructorService instructorService) {
@@ -18,22 +17,23 @@ public class InstructorController {
     }
 
     @PostMapping
-    public Instructor addInstructor(@RequestBody Instructor instructor) {
-        return instructorService.addInstructor(instructor);
+    public InstructorDTO addInstructor(@RequestBody InstructorDTO instructorDTO) {
+        return instructorService.addInstructor(instructorDTO);
     }
+
     @GetMapping
-    public List<Instructor> getAllInstructors() {
+    public List<InstructorDTO> getAllInstructors() {
         return instructorService.getAllInstructors();
     }
 
     @GetMapping("/{id}")
-    public Instructor getById(@PathVariable Long id) {
+    public InstructorDTO getById(@PathVariable Long id) {
         return instructorService.getInstructorById(id);
     }
 
     @PutMapping("/{id}")
-    public Instructor update(@PathVariable Long id, @RequestBody Instructor instructor) {
-        return instructorService.updateInstructor(id, instructor);
+    public InstructorDTO update(@PathVariable Long id, @RequestBody InstructorDTO instructorDTO) {
+        return instructorService.updateInstructor(id, instructorDTO);
     }
 
     @DeleteMapping("/{id}")
