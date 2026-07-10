@@ -8,19 +8,24 @@ import org.example.coursemanagement.Repository.CourseRepository;
 import org.example.coursemanagement.Repository.EnrollmentRepository;
 import org.example.coursemanagement.Repository.StudentRepository;
 import org.example.coursemanagement.ServiceImplementation.EnrollmentServiceImplementation;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
-import java.util.Optional;
+import org.springframework.data.domain.PageRequest;
+
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+
 class EnrollmentServiceTest {
+
 
     @Mock
     private EnrollmentRepository enrollmentRepository;
@@ -31,76 +36,119 @@ class EnrollmentServiceTest {
     @Mock
     private CourseRepository courseRepository;
 
+
     @InjectMocks
-    private EnrollmentServiceImplementation enrollmentService;
+    private EnrollmentServiceImplementation service;
+
+
+
+    @BeforeEach
+    void setup(){
+
+        MockitoAnnotations.openMocks(this);
+
+    }
+
+
+
+
+    // ===========================
+    // enrollStudent tests
+    // ===========================
 
 
     @Test
-    void enrollStudent_shouldCreateEnrollment() {
+    void enrollStudent_success(){
+
 
         Student student = new Student();
         student.setId(1L);
-        student.setName("Ahmed");
 
 
         Course course = new Course();
-        course.setId(1L);
-        course.setTitle("Spring Boot");
+        course.setId(10L);
+        course.setDeleted(false);
 
 
-        Enrollment enrollment = new Enrollment();
-        enrollment.setId(1L);
-        enrollment.setStudent(student);
-        enrollment.setCourse(course);
-        enrollment.setStatus("ENROLLED");
+
+        Enrollment saved = new Enrollment();
+        saved.setId(100L);
+        saved.setStudent(student);
+        saved.setCourse(course);
+        saved.setStatus("ENROLLED");
+
 
 
         when(studentRepository.findById(1L))
                 .thenReturn(Optional.of(student));
 
-        when(courseRepository.findById(1L))
+
+        when(courseRepository.findById(10L))
                 .thenReturn(Optional.of(course));
 
-        when(enrollmentRepository.findByStudentIdAndCourseId(1L, 1L))
+
+        when(enrollmentRepository
+                .findByStudentIdAndCourseId(1L,10L))
                 .thenReturn(Optional.empty());
 
-        when(enrollmentRepository.save(any(Enrollment.class)))
-                .thenReturn(enrollment);
+
+
+        when(enrollmentRepository.save(any()))
+                .thenReturn(saved);
+
 
 
         EnrollmentDTO result =
-                enrollmentService.enrollStudent(1L, 1L);
+                service.enrollStudent(1L,10L);
 
 
-        assertEquals(1L, result.getStudentId());
-        assertEquals(1L, result.getCourseId());
-        assertEquals("ENROLLED", result.getStatus());
+
+        assertEquals(100L,result.getId());
+        assertEquals(1L,result.getStudentId());
+        assertEquals(10L,result.getCourseId());
+        assertEquals("ENROLLED",result.getStatus());
+
 
 
         verify(enrollmentRepository)
                 .save(any(Enrollment.class));
+
     }
 
 
+
+
+
+
     @Test
-    void enrollStudent_shouldThrowExceptionWhenStudentNotFound() {
+    void enrollStudent_studentNotFound(){
 
 
         when(studentRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
 
-        assertThrows(RuntimeException.class,
-                () -> enrollmentService.enrollStudent(1L, 1L));
+
+        assertThrows(
+                RuntimeException.class,
+                () -> service.enrollStudent(1L,10L)
+        );
 
 
-        verify(enrollmentRepository, never())
+        verify(enrollmentRepository,never())
                 .save(any());
+
     }
 
 
+
+
+
+
+
     @Test
-    void enrollStudent_shouldThrowExceptionWhenCourseNotFound() {
+    void enrollStudent_courseNotFound(){
+
 
         Student student = new Student();
         student.setId(1L);
@@ -109,93 +157,266 @@ class EnrollmentServiceTest {
         when(studentRepository.findById(1L))
                 .thenReturn(Optional.of(student));
 
-        when(courseRepository.findById(1L))
+
+        when(courseRepository.findById(10L))
                 .thenReturn(Optional.empty());
 
 
-        assertThrows(RuntimeException.class,
-                () -> enrollmentService.enrollStudent(1L, 1L));
 
+        assertThrows(
+                RuntimeException.class,
+                () -> service.enrollStudent(1L,10L)
+        );
 
-        verify(enrollmentRepository, never())
-                .save(any());
     }
 
 
+
+
+
+
+
     @Test
-    void enrollStudent_shouldPreventDuplicateEnrollment() {
+    void enrollStudent_courseDeleted(){
+
 
         Student student = new Student();
         student.setId(1L);
+
 
         Course course = new Course();
-        course.setId(1L);
+        course.setId(10L);
+        course.setDeleted(true);
 
-
-        Enrollment existing = new Enrollment();
 
 
         when(studentRepository.findById(1L))
                 .thenReturn(Optional.of(student));
 
-        when(courseRepository.findById(1L))
+
+        when(courseRepository.findById(10L))
                 .thenReturn(Optional.of(course));
 
-        when(enrollmentRepository.findByStudentIdAndCourseId(1L, 1L))
-                .thenReturn(Optional.of(existing));
 
 
-        assertThrows(RuntimeException.class,
-                () -> enrollmentService.enrollStudent(1L, 1L));
+        assertThrows(
+                RuntimeException.class,
+                () -> service.enrollStudent(1L,10L)
+        );
 
 
-        verify(enrollmentRepository, never())
+        verify(enrollmentRepository,never())
                 .save(any());
+
     }
 
 
+
+
+
+
+
     @Test
-    void getEnrollmentById_shouldReturnEnrollment() {
+    void enrollStudent_alreadyEnrolled(){
+
 
         Student student = new Student();
         student.setId(1L);
 
+
         Course course = new Course();
-        course.setId(1L);
+        course.setId(10L);
+        course.setDeleted(false);
+
+
+
+        when(studentRepository.findById(1L))
+                .thenReturn(Optional.of(student));
+
+
+        when(courseRepository.findById(10L))
+                .thenReturn(Optional.of(course));
+
+
+
+        when(enrollmentRepository
+                .findByStudentIdAndCourseId(1L,10L))
+                .thenReturn(Optional.of(new Enrollment()));
+
+
+
+        assertThrows(
+                RuntimeException.class,
+                () -> service.enrollStudent(1L,10L)
+        );
+
+
+    }
+
+
+
+
+
+
+
+    @Test
+    void enrollStudent_invalidStudentId(){
+
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.enrollStudent(null,10L)
+        );
+
+    }
+
+
+
+
+
+
+    // ===========================
+    // getEnrollmentById
+    // ===========================
+
+
+    @Test
+    void getEnrollmentById_success(){
+
+
+        Student student = new Student();
+        student.setId(1L);
+
+
+        Course course = new Course();
+        course.setId(10L);
+
+
+
+        Enrollment enrollment = new Enrollment();
+
+        enrollment.setId(5L);
+        enrollment.setStudent(student);
+        enrollment.setCourse(course);
+        enrollment.setStatus("ENROLLED");
+
+
+
+        when(enrollmentRepository.findById(5L))
+                .thenReturn(Optional.of(enrollment));
+
+
+
+        EnrollmentDTO result =
+                service.getEnrollmentById(5L);
+
+
+
+        assertEquals(5L,result.getId());
+
+    }
+
+
+
+
+
+
+    @Test
+    void getEnrollmentById_notFound(){
+
+
+        when(enrollmentRepository.findById(5L))
+                .thenReturn(Optional.empty());
+
+
+
+        assertThrows(
+                RuntimeException.class,
+                () -> service.getEnrollmentById(5L)
+        );
+
+
+    }
+
+
+
+
+
+
+    @Test
+    void getEnrollmentById_invalidId(){
+
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.getEnrollmentById(null)
+        );
+
+
+    }
+
+
+
+
+
+
+    // ===========================
+    // deleteEnrollment
+    // ===========================
+
+
+    @Test
+    void deleteEnrollment_success(){
 
 
         Enrollment enrollment = new Enrollment();
         enrollment.setId(1L);
-        enrollment.setStudent(student);
-        enrollment.setCourse(course);
-        enrollment.setStatus("ENROLLED");
+
 
 
         when(enrollmentRepository.findById(1L))
                 .thenReturn(Optional.of(enrollment));
 
 
-        EnrollmentDTO result =
-                enrollmentService.getEnrollmentById(1L);
 
+        service.deleteEnrollment(1L);
 
-        assertEquals(1L, result.getStudentId());
-        assertEquals(1L, result.getCourseId());
 
 
         verify(enrollmentRepository)
-                .findById(1L);
+                .delete(enrollment);
+
     }
+
+
+
+
+
 
 
     @Test
-    void deleteEnrollment_shouldDeleteEnrollment() {
+    void deleteEnrollment_notFound(){
 
 
-        enrollmentService.deleteEnrollment(1L);
+        when(enrollmentRepository.findById(1L))
+                .thenReturn(Optional.empty());
 
 
-        verify(enrollmentRepository)
-                .deleteById(1L);
+
+        assertThrows(
+                RuntimeException.class,
+                () -> service.deleteEnrollment(1L)
+        );
+
+
+
+        verify(enrollmentRepository,never())
+                .delete(any());
+
     }
+
+
+
+
+
 }

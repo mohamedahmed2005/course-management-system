@@ -4,163 +4,214 @@ import org.example.coursemanagement.DTO.StudentDTO;
 import org.example.coursemanagement.Entity.Student;
 import org.example.coursemanagement.Repository.StudentRepository;
 import org.example.coursemanagement.ServiceImplementation.StudentServiceImplementation;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.mockito.MockitoAnnotations;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class StudentServiceTest {
-
     @Mock
     private StudentRepository studentRepository;
 
     @InjectMocks
-    private StudentServiceImplementation studentService;
+    private StudentServiceImplementation service;
 
-
-    @Test
-    void addStudent_shouldSaveStudent() {
-
-        StudentDTO dto = new StudentDTO(
-                null,
-                "Ahmed",
-                "ahmed@gmail.com"
-        );
-
-        Student student = new Student();
-        student.setName("Ahmed");
-        student.setEmail("ahmed@gmail.com");
-
-
-        when(studentRepository.save(any(Student.class)))
-                .thenReturn(student);
-
-
-        StudentDTO result = studentService.addStudent(dto);
-
-
-        assertEquals("Ahmed", result.getName());
-        assertEquals("ahmed@gmail.com", result.getEmail());
-
-        verify(studentRepository, times(1))
-                .save(any(Student.class));
+    @BeforeEach
+    void setup(){
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void addStudent_success(){
+        StudentDTO dto =
+                new StudentDTO(
+                        null,
+                        "Ahmed",
+                        "ahmed@gmail.com"
+                );
+        Student saved = new Student();
+
+        saved.setId(1L);
+        saved.setName("Ahmed");
+        saved.setEmail("ahmed@gmail.com");
+
+        when(studentRepository.save(any(Student.class)))
+                .thenReturn(saved);
+
+        StudentDTO result =
+                service.addStudent(dto);
+
+        assertEquals(1L,result.getId());
+        assertEquals("Ahmed",result.getName());
+        assertEquals("ahmed@gmail.com",result.getEmail());
+
+        verify(studentRepository)
+                .save(any(Student.class));
+
+    }
 
     @Test
-    void getStudentById_shouldReturnStudent() {
+    void addStudent_nullDTO(){
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.addStudent(null)
+        );
 
+        verify(studentRepository,never())
+                .save(any());
+
+    }
+
+    @Test
+    void getStudentById_success(){
         Student student = new Student();
+
+        student.setId(5L);
         student.setName("Mohamed");
         student.setEmail("mohamed@gmail.com");
 
-
-        when(studentRepository.findById(1L))
+        when(studentRepository.findById(5L))
                 .thenReturn(Optional.of(student));
 
-
         StudentDTO result =
-                studentService.getStudentById(1L);
+                service.getStudentById(5L);
 
+        assertEquals(5L,result.getId());
+        assertEquals("Mohamed",result.getName());
+        assertEquals("mohamed@gmail.com",result.getEmail());
 
-        assertEquals("Mohamed", result.getName());
-        assertEquals("mohamed@gmail.com", result.getEmail());
-
-        verify(studentRepository)
-                .findById(1L);
     }
 
-
     @Test
-    void getStudentById_shouldThrowExceptionWhenNotFound() {
+    void getStudentById_notFound(){
 
-
-        when(studentRepository.findById(1L))
+        when(studentRepository.findById(5L))
                 .thenReturn(Optional.empty());
 
-
-        assertThrows(RuntimeException.class,
-                () -> studentService.getStudentById(1L));
-
-
-        verify(studentRepository)
-                .findById(1L);
-    }
-
-
-    @Test
-    void updateStudent_shouldUpdateStudent() {
-
-        Student existing = new Student();
-        existing.setName("Old Name");
-        existing.setEmail("old@gmail.com");
-
-
-        StudentDTO dto = new StudentDTO(
-                1L,
-                "New Name",
-                "new@gmail.com"
+        assertThrows(
+                RuntimeException.class,
+                () -> service.getStudentById(5L)
         );
 
+    }
+
+    @Test
+    void getStudentById_invalidId(){
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.getStudentById(null)
+        );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.getStudentById(-1L)
+        );
+    }
+
+    @Test
+    void updateStudent_success(){
+        Student existing = new Student();
+
+        existing.setId(1L);
+        existing.setName("Old");
+        existing.setEmail("old@gmail.com");
+
+        StudentDTO dto =
+                new StudentDTO(
+                        1L,
+                        "New",
+                        "new@gmail.com"
+                );
 
         when(studentRepository.findById(1L))
                 .thenReturn(Optional.of(existing));
 
-
         when(studentRepository.save(any(Student.class)))
                 .thenReturn(existing);
 
-
         StudentDTO result =
-                studentService.updateStudent(1L, dto);
+                service.updateStudent(1L,dto);
 
+        assertEquals(
+                "New",
+                result.getName()
+        );
 
-        assertEquals("New Name", result.getName());
-        assertEquals("new@gmail.com", result.getEmail());
-
-
+        assertEquals(
+                "new@gmail.com",
+                result.getEmail()
+        );
         verify(studentRepository)
                 .save(existing);
+
     }
 
+    @Test
+    void updateStudent_notFound(){
+        when(studentRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        StudentDTO dto =
+                new StudentDTO(
+                        1L,
+                        "Ahmed",
+                        "a@gmail.com"
+                );
+        assertThrows(
+                RuntimeException.class,
+                () -> service.updateStudent(1L,dto)
+        );
+        verify(studentRepository,never())
+                .save(any());
+    }
 
     @Test
-    void deleteStudent_shouldDeleteStudent() {
+    void updateStudent_nullDTO(){
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.updateStudent(1L,null)
+        );
+    }
 
+    @Test
+    void deleteStudent_success(){
         Student student = new Student();
-
+        student.setId(1L);
         when(studentRepository.findById(1L))
                 .thenReturn(Optional.of(student));
-
-
-        studentService.deleteStudent(1L);
-
+        service.deleteStudent(1L);
 
         verify(studentRepository)
                 .delete(student);
     }
 
-
     @Test
-    void deleteStudent_shouldThrowExceptionWhenNotFound() {
-
-
+    void deleteStudent_notFound(){
         when(studentRepository.findById(1L))
                 .thenReturn(Optional.empty());
+        assertThrows(
+                RuntimeException.class,
+                () -> service.deleteStudent(1L)
+        );
+        verify(studentRepository,never())
+                .delete(any());
+    }
 
+    @Test
+    void deleteStudent_invalidId(){
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.deleteStudent(null)
+        );
 
-        assertThrows(RuntimeException.class,
-                () -> studentService.deleteStudent(1L));
-
-
-        verify(studentRepository, never())
-                .delete(any(Student.class));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.deleteStudent(0L)
+        );
     }
 }

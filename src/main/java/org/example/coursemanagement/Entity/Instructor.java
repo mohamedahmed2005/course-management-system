@@ -13,7 +13,9 @@ public class Instructor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter
+    @Setter
     private Long id;
+
     @Setter
     @Getter
     private String name;
