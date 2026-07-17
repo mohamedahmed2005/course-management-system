@@ -1,29 +1,27 @@
 package org.example.coursemanagement.DTO;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class EnrollmentDTO {
-    @Getter
-    @Setter
-    private Long   id;
 
-    @Getter
-    @Setter
-    private Long   studentId;
+    private Long id;
 
-    @Getter
-    @Setter
-    private Long   courseId;
+    private Long studentId;
 
-    @Getter
-    @Setter
+    private Long courseId;
+
     private String status;
 
-    public EnrollmentDTO(Long id, Long studentId, Long courseId, String status) {
-        this.id        = id;
-        this.studentId = studentId;
-        this.courseId  = courseId;
-        this.status    = status;
-    }
+    @NotNull(message = "Enrollment date is required")
+    @PastOrPresent(message = "Enrollment date cannot be in the future")
+    private LocalDate enrollmentDate;
 }

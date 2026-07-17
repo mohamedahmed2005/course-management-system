@@ -8,23 +8,18 @@ import java.util.List;
 
 @Entity
 @Table(name = "students")
+@Getter
+@Setter
 public class Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Getter
-    @Setter
     private Long id;
 
-    @Setter
-    @Getter
     private String name;
 
-    @Setter
-    @Getter
     private String email;
 
     @OneToMany(mappedBy = "student")
     private List<Enrollment> enrollments;
-
 }

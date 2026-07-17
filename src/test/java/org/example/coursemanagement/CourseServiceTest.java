@@ -1,15 +1,16 @@
 package org.example.coursemanagement;
 
-
 import org.example.coursemanagement.DTO.CourseDTO;
 import org.example.coursemanagement.Entity.Course;
 import org.example.coursemanagement.Entity.Instructor;
+import org.example.coursemanagement.Exception.InvalidInputException;
+import org.example.coursemanagement.Exception.ResourceDeletedException;
+import org.example.coursemanagement.Exception.ResourceNotFoundException;
+import org.example.coursemanagement.Mapper.CourseMapper;
 import org.example.coursemanagement.Repository.CourseRepository;
-import org.example.coursemanagement.Repository.InstructorRepository;
 import org.example.coursemanagement.ServiceImplementation.CourseServiceImplementation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -19,238 +20,176 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-
-
 class CourseServiceTest {
 
-
-    @Mock
-    private CourseRepository courseRepository;
-
-
-    @Mock
-    private InstructorRepository instructorRepository;
-
-
-    @InjectMocks
-    private CourseServiceImplementation service;
-
-
+    @Mock private CourseRepository courseRepository;
+    @Mock private CourseMapper courseMapper;
+    @InjectMocks private CourseServiceImplementation service;
 
     @BeforeEach
-    void setup(){
+    void setup() { MockitoAnnotations.openMocks(this); }
 
-        MockitoAnnotations.openMocks(this);
+    // ── helpers ───────────────────────────────────────────────────────────────
 
+    private Course course(Long id, String title, boolean deleted) {
+        Course c = new Course();
+        c.setId(id); c.setTitle(title); c.setDeleted(deleted);
+        return c;
     }
 
-
-
-    @Test
-    void addCourse_success(){
-
-
-        CourseDTO dto =
-                new CourseDTO(
-                        null,
-                        "Java",
-                        "Spring course",
-                        1L
-                );
-
-
-        Instructor instructor = new Instructor();
-        instructor.setId(1L);
-
-
-
-        Course saved = new Course();
-        saved.setId(10L);
-        saved.setTitle("Java");
-        saved.setDescription("Spring course");
-        saved.setInstructor(instructor);
-
-
-
-        when(instructorRepository.findById(1L))
-                .thenReturn(Optional.of(instructor));
-
-
-        when(courseRepository.save(any(Course.class)))
-                .thenReturn(saved);
-
-
-
-        CourseDTO result =
-                service.addCourse(dto);
-
-
-
-        assertEquals(10L,result.getId());
-        assertEquals("Java",result.getTitle());
-
-        verify(courseRepository)
-                .save(any(Course.class));
-
+    private CourseDTO dto(Long id, String title, String desc, Long instructorId) {
+        return new CourseDTO(id, title, desc, instructorId);
     }
 
-
-
-
-    @Test
-    void getCourseById_success(){
-
-
-        Course course = new Course();
-
-        course.setId(5L);
-        course.setTitle("Database");
-
-
-        when(courseRepository.findById(5L))
-                .thenReturn(Optional.of(course));
-
-
-
-        CourseDTO result =
-                service.getCourseById(5L);
-
-
-
-        assertEquals(5L,result.getId());
-        assertEquals("Database",result.getTitle());
-
-
+    private Instructor instructor(Long id) {
+        Instructor i = new Instructor();
+        i.setId(id);
+        return i;
     }
 
-
-
+    // ── addCourse ──────────────────────────────────────────────────────────────
 
     @Test
-    void getCourseById_notFound(){
+    void addCourse_success() {
+        CourseDTO dto    = dto(null, "Java", "Spring course", 1L);
+        Course    entity = course(10L, "Java", false);
+        entity.setInstructor(instructor(1L));
+        CourseDTO result = dto(10L, "Java", "Spring course", 1L);
 
+        when(courseMapper.toEntity(dto)).thenReturn(entity);
+        when(courseRepository.save(entity)).thenReturn(entity);
+        when(courseMapper.toDTO(entity)).thenReturn(result);
 
-        when(courseRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        CourseDTO actual = service.addCourse(dto);
 
-
-
-        assertThrows(
-                RuntimeException.class,
-                () -> service.getCourseById(99L)
-        );
-
-
+        assertEquals(10L,   actual.getId());
+        assertEquals("Java", actual.getTitle());
+        verify(courseRepository).save(entity);
     }
 
-
     @Test
-    void updateCourse_success(){
+    void addCourse_noInstructor() {
+        CourseDTO dto    = dto(null, "Java", "Desc", null);
+        Course    entity = course(1L, "Java", false);
+        CourseDTO result = dto(1L, "Java", "Desc", null);
 
+        when(courseMapper.toEntity(dto)).thenReturn(entity);
+        when(courseRepository.save(entity)).thenReturn(entity);
+        when(courseMapper.toDTO(entity)).thenReturn(result);
 
-        Course existing = new Course();
+        CourseDTO actual = service.addCourse(dto);
 
-        existing.setId(1L);
-        existing.setTitle("Old");
-
-
-
-        CourseDTO dto =
-                new CourseDTO(
-                        1L,
-                        "New",
-                        "Updated",
-                        null
-                );
-
-
-
-        when(courseRepository.findById(1L))
-                .thenReturn(Optional.of(existing));
-
-
-        when(courseRepository.save(any()))
-                .thenReturn(existing);
-
-
-
-        CourseDTO result =
-                service.updateCourse(1L,dto);
-
-
-
-        assertEquals(
-                "New",
-                result.getTitle()
-        );
-
-
-        verify(courseRepository)
-                .save(existing);
-
-
+        assertNull(actual.getInstructorId());
+        verify(courseRepository).save(entity);
     }
 
-
-
+    // ── getCourseById ──────────────────────────────────────────────────────────
 
     @Test
-    void deleteCourse_success(){
+    void getCourseById_success() {
+        Course    entity = course(5L, "Database", false);
+        CourseDTO result = dto(5L, "Database", "Desc", null);
 
+        when(courseRepository.findById(5L)).thenReturn(Optional.of(entity));
+        when(courseMapper.toDTO(entity)).thenReturn(result);
 
-        Course course = new Course();
+        CourseDTO actual = service.getCourseById(5L);
 
-        course.setId(1L);
-        course.setDeleted(false);
+        assertEquals(5L,         actual.getId());
+        assertEquals("Database", actual.getTitle());
+    }
 
+    @Test
+    void getCourseById_notFound() {
+        when(courseRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> service.getCourseById(99L));
+    }
 
+    @Test
+    void getCourseById_deleted() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course(1L, "Java", true)));
+        assertThrows(ResourceDeletedException.class, () -> service.getCourseById(1L));
+    }
 
-        when(courseRepository.findById(1L))
-                .thenReturn(Optional.of(course));
+    @Test
+    void getCourseById_nullId() {
+        assertThrows(InvalidInputException.class, () -> service.getCourseById(null));
+    }
 
+    @Test
+    void getCourseById_negativeId() {
+        assertThrows(InvalidInputException.class, () -> service.getCourseById(-1L));
+    }
 
+    // ── updateCourse ───────────────────────────────────────────────────────────
+
+    @Test
+    void updateCourse_success() {
+        Course    existing = course(1L, "Old", false);
+        CourseDTO dto      = dto(1L, "New", "Updated", null);
+        CourseDTO result   = dto(1L, "New", "Updated", null);
+
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(courseRepository.save(existing)).thenReturn(existing);
+        when(courseMapper.toDTO(existing)).thenReturn(result);
+
+        CourseDTO actual = service.updateCourse(1L, dto);
+
+        assertEquals("New",     actual.getTitle());
+        assertEquals("Updated", actual.getDescription());
+        verify(courseRepository).save(existing);
+    }
+
+    @Test
+    void updateCourse_notFound() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.updateCourse(1L, dto(1L, "A", "B", null)));
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourse_onDeletedCourse() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course(1L, "Java", true)));
+        assertThrows(ResourceDeletedException.class,
+                () -> service.updateCourse(1L, dto(1L, "New", "Desc", null)));
+    }
+
+    @Test
+    void updateCourse_invalidId() {
+        assertThrows(InvalidInputException.class,
+                () -> service.updateCourse(0L, dto(null, "A", "B", null)));
+    }
+
+    // ── deleteCourse ───────────────────────────────────────────────────────────
+
+    @Test
+    void deleteCourse_success() {
+        Course c = course(1L, "Java", false);
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(c));
 
         service.deleteCourse(1L);
 
-
-
-        assertTrue(course.isDeleted());
-
-
-        verify(courseRepository)
-                .save(course);
-
-
+        assertTrue(c.isDeleted());
+        verify(courseRepository).save(c);
     }
-
-
-
 
     @Test
-    void addCourse_nullDTO(){
-
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.addCourse(null)
-        );
-
-
+    void deleteCourse_notFound() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> service.deleteCourse(1L));
     }
-
-
-
 
     @Test
-    void getCourse_invalidId(){
-
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.getCourseById(null)
-        );
-
-
+    void deleteCourse_alreadyDeleted() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course(1L, "Java", true)));
+        assertThrows(ResourceDeletedException.class, () -> service.deleteCourse(1L));
+        verify(courseRepository, never()).save(any());
     }
 
+    @Test
+    void deleteCourse_invalidId() {
+        assertThrows(InvalidInputException.class, () -> service.deleteCourse(null));
+        assertThrows(InvalidInputException.class, () -> service.deleteCourse(-1L));
+    }
 }

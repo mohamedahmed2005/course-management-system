@@ -2,6 +2,9 @@ package org.example.coursemanagement;
 
 import org.example.coursemanagement.DTO.StudentDTO;
 import org.example.coursemanagement.Entity.Student;
+import org.example.coursemanagement.Exception.InvalidInputException;
+import org.example.coursemanagement.Exception.ResourceNotFoundException;
+import org.example.coursemanagement.Mapper.StudentMapper;
 import org.example.coursemanagement.Repository.StudentRepository;
 import org.example.coursemanagement.ServiceImplementation.StudentServiceImplementation;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,209 +12,141 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class StudentServiceTest {
-    @Mock
-    private StudentRepository studentRepository;
 
-    @InjectMocks
-    private StudentServiceImplementation service;
+    @Mock private StudentRepository studentRepository;
+    @Mock private StudentMapper studentMapper;
+    @InjectMocks private StudentServiceImplementation service;
 
     @BeforeEach
-    void setup(){
-        MockitoAnnotations.openMocks(this);
+    void setup() { MockitoAnnotations.openMocks(this); }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
+    private Student student(Long id, String name, String email) {
+        Student s = new Student();
+        s.setId(id); s.setName(name); s.setEmail(email);
+        return s;
+    }
+
+    private StudentDTO dto(Long id, String name, String email) {
+        return new StudentDTO(id, name, email);
+    }
+
+    // ── addStudent ─────────────────────────────────────────────────────────────
+
+    @Test
+    void addStudent_success() {
+        StudentDTO dto   = dto(null, "Ahmed", "ahmed@gmail.com");
+        Student    saved = student(1L, "Ahmed", "ahmed@gmail.com");
+        StudentDTO result = dto(1L, "Ahmed", "ahmed@gmail.com");
+
+        when(studentMapper.toEntity(dto)).thenReturn(saved);
+        when(studentRepository.save(saved)).thenReturn(saved);
+        when(studentMapper.toDTO(saved)).thenReturn(result);
+
+        StudentDTO actual = service.addStudent(dto);
+
+        assertEquals(1L,                actual.getId());
+        assertEquals("Ahmed",           actual.getName());
+        assertEquals("ahmed@gmail.com", actual.getEmail());
+        verify(studentRepository).save(saved);
+    }
+
+    // ── getStudentById ─────────────────────────────────────────────────────────
+
+    @Test
+    void getStudentById_success() {
+        Student    student = student(5L, "Mohamed", "mohamed@gmail.com");
+        StudentDTO result  = dto(5L, "Mohamed", "mohamed@gmail.com");
+
+        when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
+        when(studentMapper.toDTO(student)).thenReturn(result);
+
+        StudentDTO actual = service.getStudentById(5L);
+
+        assertEquals(5L,                  actual.getId());
+        assertEquals("Mohamed",           actual.getName());
+        assertEquals("mohamed@gmail.com", actual.getEmail());
     }
 
     @Test
-    void addStudent_success(){
-        StudentDTO dto =
-                new StudentDTO(
-                        null,
-                        "Ahmed",
-                        "ahmed@gmail.com"
-                );
-        Student saved = new Student();
-
-        saved.setId(1L);
-        saved.setName("Ahmed");
-        saved.setEmail("ahmed@gmail.com");
-
-        when(studentRepository.save(any(Student.class)))
-                .thenReturn(saved);
-
-        StudentDTO result =
-                service.addStudent(dto);
-
-        assertEquals(1L,result.getId());
-        assertEquals("Ahmed",result.getName());
-        assertEquals("ahmed@gmail.com",result.getEmail());
-
-        verify(studentRepository)
-                .save(any(Student.class));
-
+    void getStudentById_notFound() {
+        when(studentRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> service.getStudentById(99L));
     }
 
     @Test
-    void addStudent_nullDTO(){
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.addStudent(null)
-        );
-
-        verify(studentRepository,never())
-                .save(any());
-
+    void getStudentById_nullId() {
+        assertThrows(InvalidInputException.class, () -> service.getStudentById(null));
     }
 
     @Test
-    void getStudentById_success(){
-        Student student = new Student();
+    void getStudentById_negativeId() {
+        assertThrows(InvalidInputException.class, () -> service.getStudentById(-1L));
+    }
 
-        student.setId(5L);
-        student.setName("Mohamed");
-        student.setEmail("mohamed@gmail.com");
+    // ── updateStudent ──────────────────────────────────────────────────────────
 
-        when(studentRepository.findById(5L))
-                .thenReturn(Optional.of(student));
+    @Test
+    void updateStudent_success() {
+        Student    existing = student(1L, "Old", "old@gmail.com");
+        StudentDTO dto      = dto(1L, "New", "new@gmail.com");
+        StudentDTO result   = dto(1L, "New", "new@gmail.com");
 
-        StudentDTO result =
-                service.getStudentById(5L);
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(studentRepository.save(existing)).thenReturn(existing);
+        when(studentMapper.toDTO(existing)).thenReturn(result);
 
-        assertEquals(5L,result.getId());
-        assertEquals("Mohamed",result.getName());
-        assertEquals("mohamed@gmail.com",result.getEmail());
+        StudentDTO actual = service.updateStudent(1L, dto);
 
+        assertEquals("New",           actual.getName());
+        assertEquals("new@gmail.com", actual.getEmail());
+        verify(studentRepository).save(existing);
     }
 
     @Test
-    void getStudentById_notFound(){
-
-        when(studentRepository.findById(5L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                RuntimeException.class,
-                () -> service.getStudentById(5L)
-        );
-
+    void updateStudent_notFound() {
+        when(studentRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.updateStudent(1L, dto(1L, "A", "a@b.com")));
+        verify(studentRepository, never()).save(any());
     }
 
     @Test
-    void getStudentById_invalidId(){
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.getStudentById(null)
-        );
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.getStudentById(-1L)
-        );
+    void updateStudent_invalidId() {
+        assertThrows(InvalidInputException.class,
+                () -> service.updateStudent(0L, dto(null, "A", "a@b.com")));
     }
 
-    @Test
-    void updateStudent_success(){
-        Student existing = new Student();
-
-        existing.setId(1L);
-        existing.setName("Old");
-        existing.setEmail("old@gmail.com");
-
-        StudentDTO dto =
-                new StudentDTO(
-                        1L,
-                        "New",
-                        "new@gmail.com"
-                );
-
-        when(studentRepository.findById(1L))
-                .thenReturn(Optional.of(existing));
-
-        when(studentRepository.save(any(Student.class)))
-                .thenReturn(existing);
-
-        StudentDTO result =
-                service.updateStudent(1L,dto);
-
-        assertEquals(
-                "New",
-                result.getName()
-        );
-
-        assertEquals(
-                "new@gmail.com",
-                result.getEmail()
-        );
-        verify(studentRepository)
-                .save(existing);
-
-    }
+    // ── deleteStudent ──────────────────────────────────────────────────────────
 
     @Test
-    void updateStudent_notFound(){
-        when(studentRepository.findById(1L))
-                .thenReturn(Optional.empty());
+    void deleteStudent_success() {
+        Student s = student(1L, "Ahmed", "a@b.com");
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(s));
 
-        StudentDTO dto =
-                new StudentDTO(
-                        1L,
-                        "Ahmed",
-                        "a@gmail.com"
-                );
-        assertThrows(
-                RuntimeException.class,
-                () -> service.updateStudent(1L,dto)
-        );
-        verify(studentRepository,never())
-                .save(any());
-    }
-
-    @Test
-    void updateStudent_nullDTO(){
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.updateStudent(1L,null)
-        );
-    }
-
-    @Test
-    void deleteStudent_success(){
-        Student student = new Student();
-        student.setId(1L);
-        when(studentRepository.findById(1L))
-                .thenReturn(Optional.of(student));
         service.deleteStudent(1L);
 
-        verify(studentRepository)
-                .delete(student);
+        verify(studentRepository).delete(s);
     }
 
     @Test
-    void deleteStudent_notFound(){
-        when(studentRepository.findById(1L))
-                .thenReturn(Optional.empty());
-        assertThrows(
-                RuntimeException.class,
-                () -> service.deleteStudent(1L)
-        );
-        verify(studentRepository,never())
-                .delete(any());
+    void deleteStudent_notFound() {
+        when(studentRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> service.deleteStudent(1L));
+        verify(studentRepository, never()).delete(any());
     }
 
     @Test
-    void deleteStudent_invalidId(){
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.deleteStudent(null)
-        );
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.deleteStudent(0L)
-        );
+    void deleteStudent_invalidId() {
+        assertThrows(InvalidInputException.class, () -> service.deleteStudent(null));
+        assertThrows(InvalidInputException.class, () -> service.deleteStudent(0L));
     }
 }

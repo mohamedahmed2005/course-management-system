@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface EnrollmentService {
 
-    EnrollmentDTO enrollStudent(Long studentId, Long courseId);
+    EnrollmentDTO enrollStudent(Long studentId, Long courseId, EnrollmentDTO enrollmentDTO);
     Page<EnrollmentDTO> getAllEnrollments(Pageable pageable);
 
     List<EnrollmentDTO> getEnrollmentsByStudentId(Long studentId);

@@ -1,5 +1,6 @@
 package org.example.coursemanagement.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,32 +9,25 @@ import java.util.List;
 
 @Entity
 @Table(name = "courses")
+@Getter
+@Setter
 public class Course {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Getter
-    @Setter
     private Long id;
 
-    @Setter
-    @Getter
     private String title;
 
-    @Setter
-    @Getter
     private String description;
 
-    @Getter
-    @Setter
-    private boolean deleted = false; // Soft Delete
+    private boolean deleted = false;
 
     @ManyToOne
     @JoinColumn(name = "instructor_id")
-    @Getter
-    @Setter
     private Instructor instructor;
 
-    @OneToMany(mappedBy = "course")
+    @JsonIgnore
+    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
     private List<Enrollment> enrollments;
 }

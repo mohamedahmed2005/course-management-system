@@ -8,24 +8,18 @@ import java.util.List;
 
 @Entity
 @Table(name = "instructors")
+@Getter
+@Setter
 public class Instructor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Getter
-    @Setter
     private Long id;
 
-    @Setter
-    @Getter
     private String name;
 
-    @Setter
-    @Getter
     private String specialization;
 
     @OneToMany(mappedBy = "instructor")
     private List<Course> courses;
-
-    // getters & setters
 }

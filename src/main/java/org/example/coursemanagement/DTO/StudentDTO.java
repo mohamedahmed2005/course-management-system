@@ -1,24 +1,22 @@
 package org.example.coursemanagement.DTO;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class StudentDTO {
 
-    @Getter
     private Long id;
 
-    @Getter
-    @Setter
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @Getter
-    @Setter
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be a valid email address")
     private String email;
-
-    public StudentDTO(Long id, String name, String email) {
-        this.id    = id;
-        this.name  = name;
-        this.email = email;
-    }
 }

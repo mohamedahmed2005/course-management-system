@@ -1,4 +1,4 @@
-package org.example.coursemanagement;
+package org.example.coursemanagement.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

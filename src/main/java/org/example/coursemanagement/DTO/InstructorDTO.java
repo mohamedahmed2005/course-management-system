@@ -1,26 +1,20 @@
 package org.example.coursemanagement.DTO;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class InstructorDTO {
 
-    @Setter
-    @Getter
-    private Long   id;
+    private Long id;
 
-    @Getter
-    @Setter
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @Getter
+    @NotBlank(message = "Specialization is required")
     private String specialization;
-
-    public InstructorDTO(Long id, String name, String specialization) {
-        this.id             = id;
-        this.name           = name;
-        this.specialization = specialization;
-    }
-
-
 }
