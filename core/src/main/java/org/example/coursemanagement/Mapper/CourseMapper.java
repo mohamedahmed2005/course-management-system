@@ -25,7 +25,9 @@ public class CourseMapper {
                 course.getId(),
                 course.getTitle(),
                 course.getDescription(),
-                instructorId
+                instructorId,
+                course.getRegistrationStartTime(),
+                course.getRegistrationEndTime()
         );
     }
 
@@ -33,6 +35,8 @@ public class CourseMapper {
         Course course = new Course();
         course.setTitle(dto.getTitle());
         course.setDescription(dto.getDescription());
+        course.setRegistrationStartTime(dto.getRegistrationStartTime());
+        course.setRegistrationEndTime(dto.getRegistrationEndTime());
         setInstructor(course, dto.getInstructorId());
         return course;
     }

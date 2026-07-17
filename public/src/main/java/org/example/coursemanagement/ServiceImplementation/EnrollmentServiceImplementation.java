@@ -6,6 +6,7 @@ import org.example.coursemanagement.Entity.Enrollment;
 import org.example.coursemanagement.Entity.Student;
 import org.example.coursemanagement.Exception.DuplicateEnrollmentException;
 import org.example.coursemanagement.Exception.InvalidInputException;
+import org.example.coursemanagement.Exception.RegistrationWindowException;
 import org.example.coursemanagement.Exception.ResourceDeletedException;
 import org.example.coursemanagement.Exception.ResourceNotFoundException;
 import org.example.coursemanagement.Mapper.EnrollmentMapper;
@@ -13,12 +14,12 @@ import org.example.coursemanagement.Repository.CourseRepository;
 import org.example.coursemanagement.Repository.EnrollmentRepository;
 import org.example.coursemanagement.Repository.StudentRepository;
 import org.example.coursemanagement.Service.EnrollmentService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Service
 public class EnrollmentServiceImplementation implements EnrollmentService {
@@ -55,6 +56,22 @@ public class EnrollmentServiceImplementation implements EnrollmentService {
             throw new ResourceDeletedException("Cannot enroll in deleted course");
         }
 
+        // ── Registration window validation ────────────────────────────────────
+        LocalDateTime start = course.getRegistrationStartTime();
+        LocalDateTime end   = course.getRegistrationEndTime();
+        LocalDateTime now   = LocalDateTime.now();
+
+        if (start == null || end == null) {
+            throw RegistrationWindowException.notConfigured();
+        }
+        if (now.isBefore(start)) {
+            throw RegistrationWindowException.notOpenYet(start);
+        }
+        if (now.isAfter(end)) {
+            throw RegistrationWindowException.alreadyClosed(end);
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         boolean alreadyEnrolled = enrollmentRepository
                 .findByStudentIdAndCourseId(studentId, courseId)
                 .isPresent();
@@ -73,10 +90,11 @@ public class EnrollmentServiceImplementation implements EnrollmentService {
     }
 
     @Override
-    public Page<EnrollmentDTO> getAllEnrollments(Pageable pageable) {
-        return enrollmentRepository
-                .findAll(pageable)
-                .map(enrollmentMapper::toDTO);
+    public EnrollmentDTO getEnrollmentById(Long id) {
+        validateId(id);
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment", id));
+        return enrollmentMapper.toDTO(enrollment);
     }
 
     @Override
@@ -87,24 +105,6 @@ public class EnrollmentServiceImplementation implements EnrollmentService {
                 .stream()
                 .map(enrollmentMapper::toDTO)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<EnrollmentDTO> getEnrollmentsByCourseId(Long courseId) {
-        validateId(courseId);
-        return enrollmentRepository
-                .findByCourseId(courseId)
-                .stream()
-                .map(enrollmentMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public EnrollmentDTO getEnrollmentById(Long id) {
-        validateId(id);
-        Enrollment enrollment = enrollmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Enrollment", id));
-        return enrollmentMapper.toDTO(enrollment);
     }
 
     @Override

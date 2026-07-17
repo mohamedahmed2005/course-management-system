@@ -47,12 +47,30 @@ public class GlobalExceptionHandler {
     }
 
 
+    // ── 400 Bad Request — registration window violations ──────────────────────
+
+    @ExceptionHandler(RegistrationWindowException.class)
+    public ResponseEntity<Map<String, Object>> handleRegistrationWindow(
+            RegistrationWindowException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+
     // ── 404 Not Found ──────────────────────────────────────────────────────────
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleResourceNotFound(
             ResourceNotFoundException ex) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+
+    // ── 403 Forbidden — unauthorized action ───────────────────────────────────
+
+    @ExceptionHandler(UnauthorizedActionException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedAction(
+            UnauthorizedActionException ex) {
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
 

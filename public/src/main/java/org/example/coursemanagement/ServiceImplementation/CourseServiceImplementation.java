@@ -27,12 +27,6 @@ public class CourseServiceImplementation implements CourseService {
     }
 
     @Override
-    public CourseDTO addCourse(CourseDTO courseDTO) {
-        Course course = courseMapper.toEntity(courseDTO);
-        return courseMapper.toDTO(courseRepository.save(course));
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public Page<CourseDTO> getAllCourses(Pageable pageable) {
         return (Page<CourseDTO>) courseRepository.findAll(pageable)
@@ -49,34 +43,6 @@ public class CourseServiceImplementation implements CourseService {
             throw new ResourceDeletedException("Course", id);
         }
         return courseMapper.toDTO(course);
-    }
-
-    @Override
-    public CourseDTO updateCourse(Long id, CourseDTO dto) {
-        validateId(id);
-        Course existing = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Course", id));
-        if (existing.isDeleted()) {
-            throw new ResourceDeletedException("Cannot update deleted course");
-        }
-        existing.setTitle(dto.getTitle());
-        existing.setDescription(dto.getDescription());
-        existing.setRegistrationStartTime(dto.getRegistrationStartTime());
-        existing.setRegistrationEndTime(dto.getRegistrationEndTime());
-        courseMapper.setInstructor(existing, dto.getInstructorId());
-        return courseMapper.toDTO(courseRepository.save(existing));
-    }
-
-    @Override
-    public void deleteCourse(Long id) {
-        validateId(id);
-        Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Course", id));
-        if (course.isDeleted()) {
-            throw new ResourceDeletedException("Course already deleted");
-        }
-        course.setDeleted(true);
-        courseRepository.save(course);
     }
 
     private void validateId(Long id) {
