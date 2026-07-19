@@ -1,6 +1,7 @@
 package org.example.coursemanagement.DTO;
 
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class CourseDTO {
 
     private Long instructorId;
 
+    @FutureOrPresent(message = "Registration start time must not be in the past")
     private LocalDateTime registrationStartTime;
 
     private LocalDateTime registrationEndTime;
