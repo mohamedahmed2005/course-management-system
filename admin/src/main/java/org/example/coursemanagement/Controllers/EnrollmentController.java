@@ -1,6 +1,8 @@
 package org.example.coursemanagement.Controllers;
 
+import jakarta.validation.Valid;
 import org.example.coursemanagement.DTO.EnrollmentDTO;
+import org.example.coursemanagement.DTO.EnrollmentStatusDTO;
 import org.example.coursemanagement.Service.EnrollmentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -8,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/enrollments")
@@ -66,9 +66,8 @@ public class EnrollmentController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<EnrollmentDTO> updateStatus(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
-        String status = body.get("status");
-        return ResponseEntity.ok(enrollmentService.updateEnrollmentStatus(id, status));
+            @Valid @RequestBody EnrollmentStatusDTO body) {
+        return ResponseEntity.ok(enrollmentService.updateEnrollmentStatus(id, body.getStatus()));
     }
 
     // Delete an enrollment
