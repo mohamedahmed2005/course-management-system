@@ -27,10 +27,8 @@ public class CourseServiceImplementation implements CourseService {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Page<CourseDTO> getAllCourses(Pageable pageable) {
-        return (Page<CourseDTO>) courseRepository.findAll(pageable)
-                .filter(course -> !course.isDeleted())
+        return courseRepository.findAllByDeletedFalse(pageable)
                 .map(courseMapper::toDTO);
     }
 

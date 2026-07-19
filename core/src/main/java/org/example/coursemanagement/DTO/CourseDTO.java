@@ -1,5 +1,6 @@
 package org.example.coursemanagement.DTO;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,4 +26,16 @@ public class CourseDTO {
     private LocalDateTime registrationStartTime;
 
     private LocalDateTime registrationEndTime;
+
+    /**
+     * Cross-field validation: endTime must be after startTime.
+     * Only validated when both fields are provided.
+     */
+    @AssertTrue(message = "Registration end time must be after start time")
+    private boolean isRegistrationWindowValid() {
+        if (registrationStartTime == null || registrationEndTime == null) {
+            return true; // let @NotNull handle missing values if needed
+        }
+        return registrationEndTime.isAfter(registrationStartTime);
+    }
 }
