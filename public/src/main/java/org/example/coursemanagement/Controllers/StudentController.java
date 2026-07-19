@@ -1,6 +1,5 @@
 package org.example.coursemanagement.Controllers;
 
-import jakarta.validation.Valid;
 import org.example.coursemanagement.DTO.StudentDTO;
 import org.example.coursemanagement.Service.StudentService;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,7 @@ public class StudentController {
     @PutMapping("/{id}")
     public ResponseEntity<StudentDTO> updateStudent(
             @PathVariable Long id,
-            @Valid @RequestBody StudentDTO studentDTO) {
+            @RequestBody StudentDTO studentDTO) {
         return ResponseEntity.ok(studentService.updateStudent(id, studentDTO));
     }
 }

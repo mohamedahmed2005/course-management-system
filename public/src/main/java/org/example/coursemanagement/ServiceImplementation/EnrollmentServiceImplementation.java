@@ -42,13 +42,18 @@ public class EnrollmentServiceImplementation implements EnrollmentService {
     }
 
     @Override
-    public EnrollmentDTO enrollStudent(Long studentId, Long courseId, EnrollmentDTO enrollmentDTO) {
+    public EnrollmentDTO enrollStudent(EnrollmentDTO enrollmentDTO) {
+        Long studentId = enrollmentDTO.getStudentId();
+        Long courseId  = enrollmentDTO.getCourseId();
+
         validateId(studentId);
         validateId(courseId);
 
+        // Validates studentId exists in DB — throws 404 if not found
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student", studentId));
 
+        // Validates courseId exists in DB — throws 404 if not found
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", courseId));
 
@@ -100,6 +105,12 @@ public class EnrollmentServiceImplementation implements EnrollmentService {
     @Override
     public List<EnrollmentDTO> getEnrollmentsByStudentId(Long studentId) {
         validateId(studentId);
+
+        // Validate student exists in DB — throws 404 if not found
+        if (!studentRepository.existsById(studentId)) {
+            throw new ResourceNotFoundException("Student", studentId);
+        }
+
         return enrollmentRepository
                 .findByStudentId(studentId)
                 .stream()

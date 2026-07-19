@@ -22,11 +22,9 @@ public class EnrollmentController {
     // Enroll a student into a course
     @PostMapping
     public ResponseEntity<EnrollmentDTO> enroll(
-            @RequestParam Long studentId,
-            @RequestParam Long courseId,
             @Valid @RequestBody EnrollmentDTO enrollmentDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(enrollmentService.enrollStudent(studentId, courseId, enrollmentDTO));
+                .body(enrollmentService.enrollStudent(enrollmentDTO));
     }
 
     // View a specific enrollment by ID
